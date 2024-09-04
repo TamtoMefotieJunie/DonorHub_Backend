@@ -3,40 +3,49 @@ const hospitalservice = require("../services/hospital.service.js");
 const userService = require("../services/user.service.js");
 const bcrypt = require('bcrypt');
 
+
 const createHospital = async (req, res) => {
-    const { hospitalName,hospitalMatricule, hospitalAddress, adminName,adminMatricule, adminEmail, adminPassword } = req.body;
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-    try {
-        const admin = new User({
-            name: adminName,
-            email: adminEmail,
+    const { hospital, admin } = req.body; 
+    console.log("Request Body:", req.body);
+    if (!admin.adminPassword) {
+        return res.status(400).json({ message: 'adminPassword is required' });
+    }
+    try { 
+        const hashedPassword = await bcrypt.hash(admin.adminPassword, 10);
+        console.log("Hashed Password:", hashedPassword);
+
+        const adminData = {
+            name: admin.adminName,
+            email: admin.adminEmail,
             password: hashedPassword,
-            matriculationID:adminMatricule, 
-            role: 'admin'
-        });
-        const savedAdmin = await userService.registerUser(admin);
-        const hospital = new hospital({
-            name: hospitalName,
-            address: hospitalAddress,
-            matriculationID:hospitalMatricule,
+            matriculationID: admin.adminMatricule,
+            role: admin.role,
+        };
+
+        const savedAdmin = await userService.registerUser(adminData);
+        const hospitalData = {
+            name: hospital.hospitalName,
+            location: hospital.hospitalAddress,
+            matriculationID: hospital.hospitalMatricule,
             admin: savedAdmin._id 
-        });
-        const savedHospital = await hospitalservice.createHospital(hospital);
+        };
+        const savedHospital = await hospitalservice.createHospital(hospitalData);
         savedAdmin.hospital = savedHospital._id;
         await userService.updateUser(savedAdmin);
+
         return res.status(201).json({
             message: 'Hospital and Admin created successfully',
             hospital: savedHospital,
             admin: savedAdmin
         });
     } catch (error) {
-        console.error(error);
+        console.log("Error:", error);
         return res.status(500).json({
             message: 'Error creating hospital and admin',
             error: error.message
         });
     }
-}
+};
 
 const getAllHospitals = async (req, res) => {
     try {
@@ -49,9 +58,9 @@ const getAllHospitals = async (req, res) => {
 }
 
 const DeleteHospitals = async(req, res) =>{
-    const {_id} = req.params;
+    const {id} = req.params;
     try {
-        const hospital = await hospitalservice.DeleteHospital(_id);
+        const hospital = await hospitalservice.DeleteHospital(id);
         return res.status(200).json({message: "Hospital deleted successfully", data:hospital})
     } catch(error) {
         console.error({mesage:"an error occured while deleting the hopsitals",error:error.message})
@@ -60,10 +69,13 @@ const DeleteHospitals = async(req, res) =>{
 }
 
 const updateHospitals = async (req, res) => {
-    const _id = req.params;
+    const {id} = req.params;
     const hospital = req.body;
+    console.log(id,hospital);
+    
     try {
-        const Hospital = await hospitalservice.updateHospital(_id, hospital);
+        let Hospital = await hospitalservice.updateHospital(id, hospital);
+        
         return res.status(200).json({message: "Hospital updated successfully", data:Hospital})
     } catch(error) {
         console.error({mesage:"an error occured while updating the hopsitals",error:error.message})
@@ -72,48 +84,60 @@ const updateHospitals = async (req, res) => {
 }
 
 const addtechnician = async (req, res) => {
-    const {technician, hospital} = req.body;
-   try {
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(technician?.password, salt)
-        const newTech = {...technician, password:hashedPassword}
-        const dbHospital = await hospitalservice.getHospitalByName(hospital?.name);
-        const technicianObj = dbHospital.technicians.find(tech => tech.email===technician.email);
-        if (technicianObj) return res.status(400).json({message: "Technician already added in this hospital !"});
-        const AddedTechnician = dbHospital.technicians.push(newTech)
-        try {
-            const saved = dbHospital.save();
-            return res.status(200).json({data:saved,message: "New technician added successfully !"});
+    const { technician, hospital } = req.body;
+
+    try {
+        const dbHospital = await hospitalservice.getHospitalByName(hospital.name);
+        if (!dbHospital) {
+            return res.status(404).json({ message: "Hospital not found" });
         }
-        catch(error) {
-            console.error({message:"an error occured while saving the new lab tech",error:error.mesage})
-        }
-    }catch(error) {
-        console.error(error);
+         const technicianObj = dbHospital.technicians.find(techId => techId.email === technician.email);
+         if (technicianObj) {
+             return res.status(400).json({ message: "Technician already added to this hospital!" });
+         }
+        
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(technician.password, salt);
+
+        const newTech = {
+            ...technician,
+            password: hashedPassword
+        };
+
+        const savedTechnician = await userService.registerUser(newTech);
+
+        dbHospital.technicians.push(savedTechnician._id);
+
+        const savedHospital = await dbHospital.save();
+
+        return res.status(200).json({ data: savedHospital, message: "New technician added successfully!" });
+    } catch (error) {
+        console.error({ message: "An error occurred while saving the new lab tech", error: error.message });
+        return res.status(500).json({ message: "An error occurred", error: error.message });
     }
 }
 
 const Deletechnician = async (req, res) => {
-    const { hospitalId, technicianId } = req.body;
-    try {
-        
-        const hospital = await hospitalservice.getHospitalById(hospitalId);
-        if (!hospital) {
-            return res.status(404).json({ message: 'Hospital not found' });
-        }
-        const technicianIndex = hospital.technicians.indexOf(technicianId);
-        if (technicianIndex === -1) {
-            return res.status(404).json({ message: 'Technician not found in this hospital' });
-        }
-        hospital.technicians.splice(technicianIndex, 1);
-        await hospital.save();
-        await userService.deleteUSer(user?.technicianId);
+    const { id, hospital } = req.body;
 
-        return res.status(200).json({ message: 'Technician deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Error deleting technician', error: error.message });
-    }
+        try {
+            const singleHospital = await hospitalservice.getHospitalById(hospital.id);
+            console.log("Before Deletion:", singleHospital.technicians);
+
+            // Use .toString() to ensure both are strings for accurate comparison
+            singleHospital.technicians = singleHospital.technicians.filter(tech => tech._id.toString() !== id);
+
+            console.log("After Deletion:", singleHospital.technicians);
+
+            // Save the updated hospital document
+            const updatedHospital = await singleHospital.save();
+
+            return res.status(200).json({ message: "Technician removed successfully", data: updatedHospital });
+        } catch (error) {
+            console.error("Error removing technician:", error);
+            return res.status(500).json({ message: "An error occurred while removing the technician", error: error.message });
+        }
+
 };
 
 

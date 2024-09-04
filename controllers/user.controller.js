@@ -2,6 +2,7 @@
 const userService = require('../services/user.service');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { listenerCount } = require('../models/hospital.model');
 
 const registerUser = async (req, res) => {
     
@@ -66,7 +67,7 @@ const getUserByEmail=async(req,res)=>{
 
 const updateUser = async (req, res) => {
     try {
-      const user = await userService.updateUser(req.params.id, req.body);
+      let user = await userService.updateUser(req.params.id, req.body);
       if (user !== null) {
         user = await userService.getUserById(req.params.id)
       }

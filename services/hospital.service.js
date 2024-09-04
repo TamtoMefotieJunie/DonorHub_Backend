@@ -24,7 +24,7 @@ const getOneHospital = async (value)=>{
 }
    
 const updateHospital = async (id, hospital) => {
-  return await hospitalSchema.findByIdAndUpdate(id, hospital);
+  return await hospitalSchema.findByIdAndUpdate(id, hospital, { new: true });
 };
    
 const DeleteHospital = async (id) => {

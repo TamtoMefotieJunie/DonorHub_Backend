@@ -1,5 +1,4 @@
 const mongoose = require("mongoose")
-const { userSchema } = require("../models/user.model");
 
 const hospitalSchema = new mongoose.Schema({
     name: String,
@@ -7,7 +6,6 @@ const hospitalSchema = new mongoose.Schema({
     admin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User', 
-       
         required: true 
     },
     matriculationID:String,

@@ -22,7 +22,7 @@ const loginUser = async (req, res) => {
             expiresIn: process.env.JWT_EXPIRE_TIME,
         });
 
-        return res.status(200).json({ tokrn:token, iserId:user._id });
+        return res.status(200).json({ token:token, user:user });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Login failed',error:error.message });

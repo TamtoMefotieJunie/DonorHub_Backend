@@ -36,11 +36,7 @@ const userSchema = mongoose.Schema(
         ref:'Roles',
         required:true,
     },
-    hospital: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hospital',
-      required: function() { return this.role === 'admin' || this.role === 'technician'; } // Required if the role is admin
-    },
+   
   },
   {
     timestamps: true,
@@ -49,6 +45,4 @@ const userSchema = mongoose.Schema(
 
 const UserModel = mongoose.model('User', userSchema);
 
-module.exports = {
-  UserModel
-}
+module.exports = UserModel

@@ -10,7 +10,7 @@ const registerUser = async (user) => {
 };
 
 const getUserByEmail = async (email)=>{
-    return await UserSchema.findOne({email})
+    return await UserSchema.findOne({email}).populate("role");
 }
 
 const getUserByAuthToken = async (authToken)=>{
