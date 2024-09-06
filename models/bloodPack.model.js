@@ -12,7 +12,10 @@ const BloodPackSchema = new mongoose.Schema({
         ref:"User",
         default: null
     },
-    price: { type: Number, required: true},
+    price: { type: Number,
+        required: true,
+        unique:false,
+    },
     
     status:{type:String, 
         enum:["Available","Expired","Bought"], 
@@ -22,6 +25,8 @@ const BloodPackSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Hospital'
     },
+    startTime:String,
+    endTime:String,
 },
     {
     timeStamps:true,
@@ -29,7 +34,4 @@ const BloodPackSchema = new mongoose.Schema({
 
 )
 
-const BloodModel = mongoose.model("BloodPack", BloodPackSchema);
-module.exports =  {
-    BloodModel
-}
+module.exports = mongoose.model("BloodPack", BloodPackSchema);

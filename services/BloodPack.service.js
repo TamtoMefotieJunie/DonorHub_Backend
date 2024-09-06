@@ -1,20 +1,18 @@
-const BloodSchema=require("../models/bloodPack.model.js");
+const BloodSchema = require("../models/bloodPack.model.js");
 
 const getAllPacks = async () => {
     return await BloodSchema.find();
 };
    
-const createPack = async () => {
-    
-    
-    
+const createPack = async (pack) => {
+    return await BloodSchema.create(pack);
   };
 const getPacksById = async (id) => {
     return await BloodSchema.findById(id);
 };
 
 const getPackByGroup = async (group)=>{
-    return await BloodSchema.findOne({group})
+    return await BloodSchema.findOne(group)
 };
 
 const getOnePack = async (value)=>{

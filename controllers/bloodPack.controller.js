@@ -1,28 +1,50 @@
 
-const packService = require ("../services/hospital.service.js");
+const packService = require ("../services/BloodPack.service.js");
+const hospitalservice = require("../services/hospital.service.js");
+const userService = require("../services/user.service.js");
+
 
 const createPack = async (req, res) => {
+    const { pack, donor } = req.body;
+    const { id } = req.params;
+
     try {
-        
-        const newPack = {...pack, donor: {...pack.donor}}
-        const isNew = await packService.getPacksById(pack?.id);
-        if (isNew){
-            return res.status(400).json({message: "blood pack already exists !"});
+        const hospitalExists = await hospitalservice.getHospitalById(id);
+        if (!hospitalExists) {
+            return res.status(404).json({ message: "Hospital not found" });
         }
-        try {
-            const addPack = await packService.createPack(newPack);
-            return res.status(200).json({message: "New hospital added successfully !", data:addPack});
+        const packExists = await packService.getPacksById(pack?.id);
+        if (packExists) {
+            return res.status(400).json({ message: "Blood pack already exists!" });
         }
-        catch(error) {
-            console.error(error);
+        const existingDonor = await userService.getUserByEmail(donor?.email);
+        let donorId,donorGroup;
+
+        if (existingDonor) {
+            console.log("Existing Donor:", existingDonor);  // Log the full donor object
+            donorId = existingDonor._id;
+            donorGroup = existingDonor.bloodGroup;
+        } else {
+            const newDonor = await userService.registerUser(donor);
+            console.log("New Donor:", newDonor);  // Log the full new donor object
+            donorId = newDonor._id;
+            donorGroup = newDonor.bloodGroup;
         }
+        console.log(donorGroup);
+        const newPack = { ...pack, donor: donorId,hospital:id,group:donorGroup };
+        const addedPack = await packService.createPack(newPack);
+        const savedPack = await addedPack.save();
+      
+        return res.status(200).json({ message: "New blood pack added successfully!", data: savedPack });
+    } catch (error) {
+        console.error("Error creating the pack: ", error);
+        return res.status(500).json({ message: "Failed to create blood pack", error: error.message });
     }
-    catch(error) {
-        console.error(error)
-    }
-}
+};
+
 const getAllPacks = async (req, res) => {
     try {
+        console.log("dmk")
         const packs = await packService.getAllPacks();
         return res.status(200).json({message: "all packs fetched Successfully", data:packs})
 
@@ -35,17 +57,29 @@ const getAllPacksByGroup = async (req, res) => {
     try {
         const group = req.body;
         const packs = await packService.getPackByGroup(group);
-        return res.status(200).json({message: Success, data:packs})
+        return res.status(200).json({message: "pack Successfully fetched", data:packs})
 
     } catch(error) {
-        console.error(error)
+        console.log(error)
     }
 }
-
-const DeletePacks = async(req, res) =>{
-    const {_id} = req.body;
+const getPacksById= async (req, res) => {
     try {
-        const pack = await packService.DeletePack(_id);
+        const pack = await packService.getPacksById(req.params?.id); 
+    
+        if (!pack) {
+            return res.status(404).json({ data: null, message: 'blood pack not found' });
+        }
+        return res.status(200).json({ data: pack, message: 'pack fetched successfully!' });
+    } catch (err) {
+        console.error(err); 
+        return res.status(500).json({ data: null, message: 'An error occurred while fetching pack' });
+    }
+};
+const DeletePacks = async(req, res) =>{
+    const {id} = req.body;
+    try {
+        const pack = await packService.DeletePack(id);
         return res.status(200).json({message: `${pack} deleted successfully`, data:pack})
     } catch(error) {
         console.error(error)
@@ -53,9 +87,9 @@ const DeletePacks = async(req, res) =>{
 }
 
 const updatePacks = async (req, res) => {
-    const {_id, pack} = req.body;
+    const {id, pack} = req.body;
     try {
-        const packs = await packService.updatePack(_id, pack);
+        const packs = await packService.updatePack(id, pack);
         return res.status(200).json({message:  "updated successfully", data:packs})
     } catch(error) {
         console.error(error)
@@ -66,7 +100,8 @@ module.exports={
     DeletePacks,
     getAllPacks,
     getAllPacksByGroup,
-    createPack
+    createPack,
+    getPacksById
 }
 
 
