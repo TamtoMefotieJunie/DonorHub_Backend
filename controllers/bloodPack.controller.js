@@ -7,31 +7,32 @@ const userService = require("../services/user.service.js");
 const createPack = async (req, res) => {
     const { pack, donor } = req.body;
     const { id } = req.params;
-
+    let donorId,donorGroup,hospitalPrice;
     try {
         const hospitalExists = await hospitalservice.getHospitalById(id);
         if (!hospitalExists) {
             return res.status(404).json({ message: "Hospital not found" });
+        }else{
+            console.log("Existing hospital:", hospitalExists);  
+            hospitalPrice = hospitalExists.packPrice;
         }
         const packExists = await packService.getPacksById(pack?.id);
         if (packExists) {
             return res.status(400).json({ message: "Blood pack already exists!" });
         }
         const existingDonor = await userService.getUserByEmail(donor?.email);
-        let donorId,donorGroup;
-
         if (existingDonor) {
-            console.log("Existing Donor:", existingDonor);  // Log the full donor object
+            console.log("Existing Donor:", existingDonor);  
             donorId = existingDonor._id;
             donorGroup = existingDonor.bloodGroup;
         } else {
             const newDonor = await userService.registerUser(donor);
-            console.log("New Donor:", newDonor);  // Log the full new donor object
+            console.log("New Donor:", newDonor); 
             donorId = newDonor._id;
             donorGroup = newDonor.bloodGroup;
         }
         console.log(donorGroup);
-        const newPack = { ...pack, donor: donorId,hospital:id,group:donorGroup };
+        const newPack = { ...pack, donor: donorId,hospital:id,group:donorGroup,price:hospitalPrice };
         const addedPack = await packService.createPack(newPack);
         const savedPack = await addedPack.save();
       
@@ -76,6 +77,33 @@ const getPacksById= async (req, res) => {
         return res.status(500).json({ data: null, message: 'An error occurred while fetching pack' });
     }
 };
+const getPacksByHospitalId = async (req, res) => {
+    const hospitalId = req.params.id; 
+  
+    try {
+        const packs = await packService.getPacksByHospitalId(hospitalId);
+        const aggregatedData = await packService.aggregatePacksByHospital(hospitalId);
+
+        if (packs.length === 0) {
+            return res.status(404).json({ message: 'No blood packs found for this hospital' });
+        }
+        
+        console.log('Hospital ID:', hospitalId);
+        console.log('Packs:', packs);
+        console.log('Aggregated Data Length:', aggregatedData.length);
+       
+
+        return res.status(200).json({
+            message: 'Packs fetched successfully!',
+            data: packs,  
+            aggregation: aggregatedData  
+        });
+    } catch (err) {
+        console.log("Error fetching packs:", err);
+        return res.status(500).json({ message: 'An error occurred while fetching packs', error: err.message });
+    }
+};
+
 const DeletePacks = async(req, res) =>{
     const {id} = req.body;
     try {
@@ -101,7 +129,8 @@ module.exports={
     getAllPacks,
     getAllPacksByGroup,
     createPack,
-    getPacksById
+    getPacksById,
+    getPacksByHospitalId,
 }
 
 

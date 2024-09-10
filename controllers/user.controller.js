@@ -6,7 +6,7 @@ const { listenerCount } = require('../models/hospital.model');
 
 const registerUser = async (req, res) => {
     
-        const { name, email, password, gender, role} = req.body;
+        const { name, email, password, gender, role,bloodGroup,telephone} = req.body;
         if (req.body.email) {
             const isUserFound = await userService.getUserByEmail(req.body.email)
             if (isUserFound) return res.status(400).json({ message: "Sorry user with this email exist already" })
@@ -18,6 +18,8 @@ const registerUser = async (req, res) => {
                 email,
                 password: hashedPassword,
                 gender,
+                bloodGroup,
+                telephone,
                 role
             };
             const user = await userService.registerUser(User);

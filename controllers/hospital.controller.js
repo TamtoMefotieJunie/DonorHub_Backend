@@ -27,6 +27,7 @@ const createHospital = async (req, res) => {
             name: hospital.hospitalName,
             location: hospital.hospitalAddress,
             matriculationID: hospital.hospitalMatricule,
+            packPrice: hospital.price,
             admin: savedAdmin._id 
         };
         const savedHospital = await hospitalservice.createHospital(hospitalData);

@@ -12,9 +12,8 @@ const BloodPackSchema = new mongoose.Schema({
         ref:"User",
         default: null
     },
-    price: { type: Number,
-        required: true,
-        unique:false,
+    price: { 
+        type: Number
     },
     
     status:{type:String, 
