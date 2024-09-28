@@ -14,13 +14,13 @@ const registerUser = async (req, res) => {
         try {
             const hashedPassword = await bcrypt.hash(password, 10);
             const User = {
-                name,
-                email,
+                name:name,
+                email:email,
                 password: hashedPassword,
-                gender,
-                bloodGroup,
-                telephone,
-                role
+                gender:gender,
+                bloodGroup:bloodGroup,
+                telephone:telephone,
+                role:role
             };
             const user = await userService.registerUser(User);
             res.status(201).json({data:user, message: 'User registered successfully' });
@@ -38,6 +38,17 @@ const getAllUsers=async(req,res)=>{
 
     }catch(err){
         return res.status(500).json('An error occured while fetching users')
+    }
+}
+const getUserByRole = async(req,res) =>{
+    console.log("hokop")
+    const {role} = req.params
+    try{
+        const users =  await userService.getUserByRole(role);
+        console.log("Fetched users:", users); // Log the fetched users
+        return res.status(200).json({message:"users fetched successfully",data:users})
+    }catch(error){
+            return res.status(500).json({message:'An error occured while fetching users',error:error})
     }
 }
 const getUserById = async (req, res) => {
@@ -96,4 +107,5 @@ module.exports = {
     getUserById,
     getUserByEmail,
     deleteUSer,
+    getUserByRole
 };

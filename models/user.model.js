@@ -9,6 +9,7 @@ const userSchema = mongoose.Schema(
     },
     password:  String,
     telephone: String,
+    
     image:{
         type:String,
         default:null,
@@ -36,6 +37,11 @@ const userSchema = mongoose.Schema(
         ref:'Roles',
         required:true,
     },
+    hospital:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:'Hospital'
+  },
+ 
    
   },
   {

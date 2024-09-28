@@ -4,6 +4,8 @@ const hospitalSchema = new mongoose.Schema({
     name: String,
     location: String,
     packPrice:Number,
+    longitude:Number,
+    latitude:Number,
     admin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User', 

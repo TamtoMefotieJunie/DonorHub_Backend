@@ -19,8 +19,8 @@ const getHospitalsByLocation = async (location) => {
   return await hospitalSchema.find({location})
 }
 
-const getOneHospital = async (value)=>{
-  return await hospitalSchema.findOne(value)
+const getOneHospital = async (admin)=>{
+  return await hospitalSchema.findOne(admin)
 }
    
 const updateHospital = async (id, hospital) => {

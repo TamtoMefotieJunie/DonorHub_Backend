@@ -12,6 +12,7 @@ const BloodPackSchema = new mongoose.Schema({
         ref:"User",
         default: null
     },
+    collectionCenter:String,
     price: { 
         type: Number
     },

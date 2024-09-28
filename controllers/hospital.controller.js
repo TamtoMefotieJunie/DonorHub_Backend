@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 const createHospital = async (req, res) => {
     const { hospital, admin } = req.body; 
     console.log("Request Body:", req.body);
-    if (!admin.adminPassword) {
+    if (!admin?.adminPassword) {
         return res.status(400).json({ message: 'adminPassword is required' });
     }
     try { 
@@ -20,6 +20,7 @@ const createHospital = async (req, res) => {
             password: hashedPassword,
             matriculationID: admin.adminMatricule,
             role: admin.role,
+            telephone:admin.telephone
         };
 
         const savedAdmin = await userService.registerUser(adminData);
@@ -32,7 +33,7 @@ const createHospital = async (req, res) => {
         };
         const savedHospital = await hospitalservice.createHospital(hospitalData);
         savedAdmin.hospital = savedHospital._id;
-        await userService.updateUser(savedAdmin);
+        await userService.updateUser(savedAdmin._id, savedAdmin);
 
         return res.status(201).json({
             message: 'Hospital and Admin created successfully',
@@ -57,6 +58,21 @@ const getAllHospitals = async (req, res) => {
         console.error({mesage:"an error occured while fetching all the hopsitals",error:error.message})
     }
 }
+
+const getOneHospital = async(req,res) => {
+    const admin = req.body;
+    try {
+    const hospital = await hospitalservice.getOneHospital(admin);
+    if (!hospital) {
+      return res.status(404).json({ message: "Hospital not found" });
+    }
+    return res.status(200).json({ message: "Success", data: hospital });
+    } catch (error) {
+        console.log({ message: "An error occurred while fetching the hospital", error: error.message });
+        return res.status(500).json({ message: "An error occurred", error: error.message });
+    }
+}
+
 
 const DeleteHospitals = async(req, res) =>{
     const {id} = req.params;
@@ -125,12 +141,11 @@ const Deletechnician = async (req, res) => {
             const singleHospital = await hospitalservice.getHospitalById(hospital.id);
             console.log("Before Deletion:", singleHospital.technicians);
 
-            // Use .toString() to ensure both are strings for accurate comparison
+           
             singleHospital.technicians = singleHospital.technicians.filter(tech => tech._id.toString() !== id);
 
             console.log("After Deletion:", singleHospital.technicians);
 
-            // Save the updated hospital document
             const updatedHospital = await singleHospital.save();
 
             return res.status(200).json({ message: "Technician removed successfully", data: updatedHospital });
@@ -149,5 +164,6 @@ module.exports={
     updateHospitals,
     Deletechnician,
     addtechnician,
+    getOneHospital
     
 }

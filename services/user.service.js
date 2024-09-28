@@ -12,7 +12,9 @@ const registerUser = async (user) => {
 const getUserByEmail = async (email)=>{
     return await UserSchema.findOne({email}).populate("role");
 }
-
+const getUserByRole = async(role) => {
+  return await UserSchema.find({role:role})
+}
 const getUserByAuthToken = async (authToken)=>{
     return await UserSchema.findOne({authToken})
 }
@@ -35,4 +37,5 @@ module.exports = {
     getAllUsers,
     getUserById,
     deleteUSer,
+    getUserByRole
 };
