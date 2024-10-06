@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose")
 
 const PaymentSchema = new mongoose.Schema({
     user: {
           type: mongoose.Schema.Types.ObjectId,
           rel: "User",
     },
-    details: {
+    description: {
         type: String
     },
     amount: {
@@ -17,7 +17,10 @@ const PaymentSchema = new mongoose.Schema({
     hospital: {
         type: String
     },
-    tel: {
+    from: {
+        type: String
+    },
+    currency: {
         type: String
     },
     date: {
@@ -26,4 +29,4 @@ const PaymentSchema = new mongoose.Schema({
     }
 })
 
-export default mongoose.model("Payment", PaymentSchema);
+module.exports = mongoose.model('Payment',PaymentSchema);

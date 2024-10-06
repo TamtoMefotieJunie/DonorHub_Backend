@@ -15,7 +15,12 @@
             let mailOptions = {
                 from: 'juniemefotie91@gmail.com',
                 to: email,
-                subject
+                subject,
+                attachments: [{
+                    filename: 'logo5.png',
+                    path:  __dirname + '/logo5.png',
+                    cid: 'unique@cid'
+                }],
             };
     
             if (html) {

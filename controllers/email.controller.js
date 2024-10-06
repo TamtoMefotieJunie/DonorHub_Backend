@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const sendMail = require('../utils/helper');
 const emailService = require("../services/email.service.js");
 
+
 const contactFriend = async (req, res) => {
     try {
         const { message, email } = req.body;
@@ -9,9 +10,12 @@ const contactFriend = async (req, res) => {
         
         const isMessageSent = await sendMail(
             nodemailer,
-            `<h1 style="color:red;font-size:30px;font:bold;">DONORHUB</h1>`,
+            'DONORHUB',
             email,
-            `<h1 style="color:red;font-size:26px;font:bold;">Your help is needed!!!</h1><p><i>${message}</i></p>`
+           `
+            <img style="width:150px; border-radius:100%;" src="cid:unique@cid" />
+            <h1 style="color:red;font-size:26px;font:bold;">Your help is needed!!!</h1>
+            <p><i>${message}</i></p>`
         );
 
         if (isMessageSent) {

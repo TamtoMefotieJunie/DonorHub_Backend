@@ -2,8 +2,6 @@ require ("dotenv").config();
 const cors = require("cors");
 const express = require("express");
 const app = express();
-// const nodemailer = require('nodemailer');
-// const mongoose = require('mongoose');
 
 app.use(express.json());
 app.use(cors());
@@ -17,6 +15,7 @@ const hospitalRoutes = require('./routes/hospital.routes');
 const protectedRoutes = require('./routes/protected.routes');
 const loginRoutes = require('./routes/authentication.routes');
 const emailRoutes = require('./routes/email.routes');
+const paymentRoute = require('./routes/payment.routes');
 
 app.use(express.json());
 app.use('/auth', authRoutes);
@@ -25,7 +24,8 @@ app.use('/banks', hospitalRoutes);
 app.use('/user', loginRoutes);
 app.use('/protected', protectedRoutes);
 app.use('/blood', packRoutes);
-app.use('/email',emailRoutes)
+app.use('/email',emailRoutes);
+app.use('/payment', paymentRoute);
 
 
 const port = process.env.PORT || 8080;
