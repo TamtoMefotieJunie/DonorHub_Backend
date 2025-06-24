@@ -7,6 +7,11 @@ app.use(express.json());
 app.use(cors());
 
 require('./db');
+const path = require('path');
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 const authRoutes = require('./routes/user.routes');
 const roleRoutes = require('./routes/role.routes');

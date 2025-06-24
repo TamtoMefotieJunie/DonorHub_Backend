@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Donation Eligibility Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #c0392b;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .eligible {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .not-eligible {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .reason {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .metrics {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Blood Donation Eligibility Checker</h1>
+    
+    <div class="form-group">
+        <label for="lastDonation">Months since Last Donation:</label>
+        <input type="number" id="lastDonation" min="0" value="6">
+    </div>
+    
+    <div class="form-group">
+        <label for="numDonations">Number of Donations:</label>
+        <input type="number" id="numDonations" min="0" value="5">
+    </div>
+    
+    <div class="form-group">
+        <label for="totalVolume">Total Volume Donated (c.c.):</label>
+        <input type="number" id="totalVolume" min="0" value="1250">
+    </div>
+    
+    <div class="form-group">
+        <label for="firstDonation">Months since First Donation:</label>
+        <input type="number" id="firstDonation" min="1" value="18">
+    </div>
+    
+    <button onclick="checkEligibility()">Check Eligibility</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        function checkEligibility() {
+            // Get form values
+            const lastDonation = document.getElementById('lastDonation').value;
+            const numDonations = document.getElementById('numDonations').value;
+            const totalVolume = document.getElementById('totalVolume').value;
+            const firstDonation = document.getElementById('firstDonation').value;
+            
+            // Validate inputs
+            if (!lastDonation || !numDonations || !totalVolume || !firstDonation) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Prepare request data
+            const data = {
+                "Months since Last Donation": parseInt(lastDonation),
+                "Number of Donations": parseInt(numDonations),
+                "Total Volume Donated (c.c.)": parseInt(totalVolume),
+                "Months since First Donation": parseInt(firstDonation)
+            };
+            
+            // Show loading state
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>Checking eligibility...</p>';
+            
+            // Make API request
+            fetch('http://localhost:5000/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display results
+                if (data.error) {
+                    resultDiv.className = '';
+                    resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+                    return;
+                }
+                
+                const isEligible = data.prediction === 1;
+                resultDiv.className = isEligible ? 'eligible' : 'not-eligible';
+                
+                let html = `
+                    <h2>${isEligible ? '✅ ELIGIBLE' : '❌ NOT ELIGIBLE'}</h2>
+                    <p>Confidence: ${(data.confidence * 100).toFixed(1)}%</p>
+                    <div class="reason">
+                        <h3>Decision Factors:</h3>
+                        <ul>
+                            ${data.decision_reason.factors.map(factor => `<li>${factor}</li>`).join('')}
+                        </ul>
+                        <p>Confidence level: ${data.decision_reason.confidence_level}</p>
+                    </div>
+                    <div class="metrics">
+                        <h3>Donation Metrics:</h3>
+                        <p>Donation rate: ${data.metrics.donation_rate_per_month.toFixed(2)} donations/month</p>
+                        <p>Average volume: ${data.metrics.average_volume_per_donation.toFixed(0)} c.c. per donation</p>
+                        <p>Months since last donation: ${data.metrics.months_since_last_donation}</p>
+                    </div>
+                `;
+                
+                resultDiv.innerHTML = html;
+            })
+            .catch(error => {
+                resultDiv.className = '';
+                resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>

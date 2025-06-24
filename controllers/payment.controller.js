@@ -24,7 +24,7 @@ const requestPayment = async(req,res) => {
 
         const result = await apiClient.post('/collect/',{
             ...paymentData,
-            external_reference: "For blood Donation",
+            external_reference: "defense test",
             external_user: ""
         });
         console.log('result: ', result)

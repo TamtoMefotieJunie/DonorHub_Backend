@@ -10,5 +10,6 @@ router.get('/fetch/group', packController.getAllPacksByGroup);
 router.get('/hospital/allpacks/:id', packController.getPacksByHospitalId);
 router.put('/update/:id', packController.updatePacks);
 router.delete('/delete/one', packController.DeletePacks);
+router.post('/check-donor', packController.checkDonor);
 
 module.exports = router;

@@ -14,6 +14,10 @@ const getPacksById = async (id) => {
 const getPacksByHospitalId = async (id) => {
     return await BloodSchema.find({ hospital: id }).populate("hospital");
 };
+const getBloodPacksByDonorId = async (donorId) => {
+    return await BloodSchema.find({ donor: donorId });
+};
+
 
 const aggregatePacksByHospital = async (id) => {
     try {
@@ -57,4 +61,5 @@ module.exports = {
     getOnePack,
     getPacksByHospitalId,
     aggregatePacksByHospital,
+    getBloodPacksByDonorId,
 };

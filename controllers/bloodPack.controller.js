@@ -2,7 +2,24 @@
 const packService = require ("../services/BloodPack.service.js");
 const hospitalservice = require("../services/hospital.service.js");
 const userService = require("../services/user.service.js");
+const axios = require('axios')
 
+const volumeStandards = {
+    RBC: { volume: 30 }, // Average volume for RBC
+    PLT: { volume: 50 }, // Average volume for Platelets
+    PL: { volume: 45 },  // Average volume for Plasma
+    Cryoprecipitate: { volume: 20 } // Average volume for Cryoprecipitate
+};
+
+const calculateTotalVolume = (components) => {
+    let totalVolume = 0;
+    components.forEach(component => {
+        if (volumeStandards[component]) {
+            totalVolume += volumeStandards[component].volume; // Add the standard volume
+        }
+    });
+    return totalVolume;
+};
 
 const createPack = async (req, res) => {
     const { pack, donor } = req.body;
@@ -42,6 +59,87 @@ const createPack = async (req, res) => {
         return res.status(500).json({ message: "Failed to create blood pack", error: error.message });
     }
 };
+
+
+
+const checkDonor = async (req, res) => {
+    const { donorId } = req.body;
+
+    try {
+        const bloodPacks = await packService.getBloodPacksByDonorId(donorId);
+
+        if (!bloodPacks.length) {
+            return res.status(404).json({ message: 'No blood packs found for this donor' });
+        }
+
+        let totalVolumeDonated = 0;
+        let numberOfDonations = bloodPacks.length;
+        let firstDonationDate = null;
+        let lastDonationDate = null;
+
+        bloodPacks.forEach(pack => {
+            const components = pack.components.split(/[,/]/);
+            components.forEach(component => {
+                if (volumeStandards[component]) {
+                    totalVolumeDonated += volumeStandards[component].volume;
+                }
+            });
+
+            const collectionDate = new Date(pack.CollectionDate);
+
+            if (!firstDonationDate || collectionDate < firstDonationDate) {
+                firstDonationDate = collectionDate;
+            }
+
+            if (!lastDonationDate || collectionDate > lastDonationDate) {
+                lastDonationDate = collectionDate;
+            }
+        });
+
+        const currentDate = new Date();
+
+        const monthsSinceFirstDonation =
+            (currentDate.getFullYear() - firstDonationDate.getFullYear()) * 12 +
+            (currentDate.getMonth() - firstDonationDate.getMonth());
+
+        const monthsSinceLastDonation =
+            (currentDate.getFullYear() - lastDonationDate.getFullYear()) * 12 +
+            (currentDate.getMonth() - lastDonationDate.getMonth());
+
+        const donatingFor = monthsSinceFirstDonation - monthsSinceLastDonation;
+        // Send features to Flask AI microservice
+        const aiResponse = await axios.post('http://127.0.0.1:5001/predict', {
+            monthsSinceLastDonation,
+            numberOfDonations,
+            monthsSinceFirstDonation,
+            donatingFor
+        });
+
+        const aiResult = aiResponse.data;
+
+        return res.status(200).json({
+            monthsSinceLastDonation,
+            numberOfDonations,
+            totalVolumeDonated,
+            monthsSinceFirstDonation,
+            meetsBasicRequirement: monthsSinceLastDonation >= 3,
+            isSafeToDonate: aiResult.canDonateAgain,
+            modelPrediction: aiResult.model,
+            recommendation: aiResult.canDonateAgain ? "Safe to donate" : "Not safe to donate",
+            predictionProbability: aiResult.predictionProbability
+        });
+
+    } catch (error) {
+        console.error("Error checking donor:", error.message);
+        return res.status(500).json({
+            message: 'An error occurred while checking donor',
+            error: error.message
+        });
+    }
+};
+
+
+    
 
 const getAllPacks = async (req, res) => {
     try {
@@ -131,6 +229,7 @@ module.exports={
     createPack,
     getPacksById,
     getPacksByHospitalId,
+    checkDonor,
 }
 
 
