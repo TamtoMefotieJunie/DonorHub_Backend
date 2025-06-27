@@ -21,6 +21,7 @@ const protectedRoutes = require('./routes/protected.routes');
 const loginRoutes = require('./routes/authentication.routes');
 const emailRoutes = require('./routes/email.routes');
 const paymentRoute = require('./routes/payment.routes');
+const predictionRoute = require('./routes/prediction.routes')
 
 app.use(express.json());
 app.use('/auth', authRoutes);
@@ -31,6 +32,7 @@ app.use('/protected', protectedRoutes);
 app.use('/blood', packRoutes);
 app.use('/email',emailRoutes);
 app.use('/payment', paymentRoute);
+app.use('/prediction',predictionRoute)
 
 
 const port = process.env.PORT || 8080;

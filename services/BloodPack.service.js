@@ -15,7 +15,7 @@ const getPacksByHospitalId = async (id) => {
     return await BloodSchema.find({ hospital: id }).populate("hospital");
 };
 const getBloodPacksByDonorId = async (donorId) => {
-    return await BloodSchema.find({ donor: donorId });
+    return await BloodSchema.find({ donor: new mongoose.Types.ObjectId(donorId) });
 };
 
 
